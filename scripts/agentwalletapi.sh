@@ -187,6 +187,16 @@ require_decimal() {
     fi
 }
 
+require_polymarket_token_id() {
+    VALUE="$1"
+    if ! [[ "$VALUE" =~ ^[0-9]+$ ]]; then
+        echo "Error: tokenId must be a numeric Polymarket outcome token ID."
+        echo "Hint: resolve market + outcome first:"
+        echo "  agentwalletapi.sh polymarket-resolve <marketUrl|slug> <outcome>"
+        exit 1
+    fi
+}
+
 pretty_print_json() {
     if command -v jq >/dev/null 2>&1; then
         jq . 2>/dev/null || cat
@@ -401,7 +411,7 @@ case "$COMMAND" in
         json_escape_var AMOUNT_ESC "$AMOUNT"
         BODY="{"
         append_wallet_id_json_field BODY "$WALLET_ID"
-        BODY="$BODY, \"to\": \"$TO_ESC\", \"amount\": \"$AMOUNT_ESC\""
+        BODY="$BODY, \"to\": \"$TO_ESC\", \"amountDisplay\": \"$AMOUNT_ESC\""
         if [ "$TOKEN" != "ETH" ]; then
             json_escape_var TOKEN_ESC "$TOKEN"
             BODY="$BODY, \"token\": \"$TOKEN_ESC\""
@@ -858,6 +868,7 @@ case "$COMMAND" in
             echo "Usage: agentwalletapi.sh polymarket-limit <walletSelector> <tokenId> <BUY|SELL> <price> <size> [--yes]"
             exit 1
         fi
+        require_polymarket_token_id "$TOKEN_ID"
         require_decimal "price" "$PRICE"
         require_decimal "size" "$SIZE"
         json_escape_var TOKEN_ID_ESC "$TOKEN_ID"
@@ -884,6 +895,7 @@ case "$COMMAND" in
             echo "Usage: agentwalletapi.sh polymarket-market <walletSelector> <tokenId> <BUY|SELL> <amount> [orderType] [worstPrice] [--yes]"
             exit 1
         fi
+        require_polymarket_token_id "$TOKEN_ID"
         require_decimal "amount" "$AMOUNT"
         require_decimal "worstPrice" "$WORST_PRICE"
         json_escape_var TOKEN_ID_ESC "$TOKEN_ID"

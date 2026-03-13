@@ -5,7 +5,7 @@ license: Proprietary
 compatibility: Requires network access to https://openclawcash.com
 metadata:
   author: agentwalletapi
-  version: "1.16.0"
+  version: "1.18.0"
   required_env_vars:
     - AGENTWALLETAPI_KEY
   optional_env_vars:
@@ -119,12 +119,13 @@ bash scripts/agentwalletapi.sh polymarket-cancel Q7X2K9P order_id_here --yes
 
 ### Base-Units Rule (Important)
 
-- `quote.amountIn`, `swap.amountIn`, `approve.amount`, and transfer `value` must be **base-units integer strings** (digits only).
+- `quote.amountIn`, `swap.amountIn`, `approve.amount`, and transfer `valueBaseUnits` must be **base-units integer strings** (digits only).
 - Do **not** send decimal strings in these fields (for example, `0.001`), or validation will fail immediately.
 - Examples:
   - `0.001 ETH` -> `1000000000000000` wei
   - `1 USDC` (6 decimals) -> `1000000`
-- For transfer, use `amount` when you want human-readable units and let the API convert.
+- For transfer, use `amountDisplay` when you want human-readable units and let the API convert.
+- Legacy transfer aliases `amount` and `value` are still accepted for compatibility.
 
 ### Import Input Safety
 
@@ -357,35 +358,36 @@ Behavior notes:
 
 Send native coin (default when no token specified):
 ```json
-{ "walletId": "Q7X2K9P", "to": "0xRecipient...", "amount": "0.01" }
+{ "walletId": "Q7X2K9P", "to": "0xRecipient...", "amountDisplay": "0.01" }
 ```
 
 Send 100 USDC by symbol:
 ```json
-{ "walletLabel": "Trading Bot", "to": "0xRecipient...", "token": "USDC", "amount": "100" }
+{ "walletLabel": "Trading Bot", "to": "0xRecipient...", "token": "USDC", "amountDisplay": "100" }
 ```
 
 Send arbitrary ERC-20 by contract address:
 ```json
-{ "walletId": "Q7X2K9P", "to": "0xRecipient...", "token": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", "amount": "100" }
+{ "walletId": "Q7X2K9P", "to": "0xRecipient...", "token": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", "amountDisplay": "100" }
 ```
 
 Send SOL by symbol:
 ```json
-{ "walletId": "Q7X2K9P", "to": "SolanaRecipientWalletAddress...", "token": "SOL", "amount": "0.01" }
+{ "walletId": "Q7X2K9P", "to": "SolanaRecipientWalletAddress...", "token": "SOL", "amountDisplay": "0.01" }
 ```
 
 Send SOL with memo (Solana only):
 ```json
-{ "walletId": "Q7X2K9P", "to": "SolanaRecipientWalletAddress...", "token": "SOL", "amount": "0.01", "memo": "payment verification note" }
+{ "walletId": "Q7X2K9P", "to": "SolanaRecipientWalletAddress...", "token": "SOL", "amountDisplay": "0.01", "memo": "payment verification note" }
 ```
 
-Use `amount` for human-readable values (e.g., "100" = 100 USDC). Use `value` for base units (smallest denomination on each chain).
+Use `amountDisplay` for human-readable values (e.g., "100" = 100 USDC). Use `valueBaseUnits` for base units (smallest denomination on each chain).
+Legacy transfer aliases `amount` and `value` remain available for compatibility.
 Use optional `chain: "evm" | "solana"` in agent payloads for explicit chain routing and validation.
 `memo` is supported only for Solana transfers and must pass safety validation (max 5 words, max 256 UTF-8 bytes, no control/invisible characters).
 Native transfers (EVM + Solana) enforce a minimum transferable amount preflight that accounts for platform fee and network fee; Solana may also require a larger first funding transfer for a brand-new recipient address.
 For native SOL transfers, the API may auto-adjust requested value to fit platform fee + network fee.
-Transfer responses include `requestedValue`, `adjustedValue`, `requestedAmount`, and `adjustedAmount`.
+Transfer responses include `requestedValueBaseUnits`, `adjustedValueBaseUnits`, `requestedAmountDisplay`, and `adjustedAmountDisplay` (legacy aliases also included).
 
 ## Token Support Model
 
@@ -424,7 +426,7 @@ Violations return HTTP 401 with an explanation message.
 - If requested native SOL + platform fee + network fee cannot fit wallet balance, API returns `400 insufficient_balance`
 - Swap supports EVM (Uniswap) and Solana mainnet (Jupiter); Quote supports EVM and Solana mainnet; Approve is EVM-only
 - A platform fee (default 1%) is deducted from the token amount
-- Use `amount` for simplicity, use `value` for precise base-unit control
+- Use `amountDisplay` for simplicity, use `valueBaseUnits` for precise base-unit control
 - For robust agent behavior:
   - First call `wallets`, then `wallet` (or `token-balance`), then `quote`, then `swap`.
   - On 400 with `insufficient_token_balance`, reduce amount or change token.

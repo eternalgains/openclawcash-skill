@@ -265,43 +265,45 @@ X-Agent-Key: occ_your_api_key
 | chain | string | No | Optional guard: `"evm"` or `"solana"` |
 | to | string | Yes | Recipient address (0x... for EVM, base58 for Solana) |
 | token | string | No | Token symbol or token address/mint. Defaults to chain native token (ETH/SOL) |
-| amount | string | One of amount/value | Human-readable amount (e.g., "100" for 100 USDC) |
-| value | string | One of amount/value | Amount in base units (e.g., "100000000" for 100 USDC with 6 decimals) |
+| amountDisplay | string | One of amountDisplay/valueBaseUnits | Human-readable amount (e.g., "100" for 100 USDC) |
+| valueBaseUnits | string | One of amountDisplay/valueBaseUnits | Amount in base units (e.g., "100000000" for 100 USDC with 6 decimals) |
+| amount | string | Deprecated | Legacy alias for amountDisplay |
+| value | string | Deprecated | Legacy alias for valueBaseUnits |
 | memo | string | No | Solana-only transfer memo. Max 5 words, max 256 UTF-8 bytes, no control/invisible characters |
 
 ### Examples
 
 Send 0.01 ETH:
 ```json
-{ "walletId": 2, "to": "0xRecipient...", "amount": "0.01" }
+{ "walletId": 2, "to": "0xRecipient...", "amountDisplay": "0.01" }
 ```
 
 Send 100 USDC by symbol:
 ```json
-{ "walletLabel": "Trading Bot", "to": "0xRecipient...", "token": "USDC", "amount": "100" }
+{ "walletLabel": "Trading Bot", "to": "0xRecipient...", "token": "USDC", "amountDisplay": "100" }
 ```
 
 Send USDC by contract address + base units:
 ```json
-{ "walletId": 2, "to": "0xRecipient...", "token": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", "value": "100000000" }
+{ "walletId": 2, "to": "0xRecipient...", "token": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", "valueBaseUnits": "100000000" }
 ```
 
 Send arbitrary ERC-20 by address + human amount:
 ```json
-{ "walletId": 2, "to": "0xRecipient...", "token": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", "amount": "100" }
+{ "walletId": 2, "to": "0xRecipient...", "token": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", "amountDisplay": "100" }
 ```
 
 Send 0.01 SOL:
 ```json
-{ "walletId": "Q7X2K9P", "to": "SolanaRecipientWalletAddress...", "token": "SOL", "amount": "0.01" }
+{ "walletId": "Q7X2K9P", "to": "SolanaRecipientWalletAddress...", "token": "SOL", "amountDisplay": "0.01" }
 ```
 Send 0.01 SOL with memo:
 ```json
-{ "walletId": "Q7X2K9P", "to": "SolanaRecipientWalletAddress...", "token": "SOL", "amount": "0.01", "memo": "payment verification note" }
+{ "walletId": "Q7X2K9P", "to": "SolanaRecipientWalletAddress...", "token": "SOL", "amountDisplay": "0.01", "memo": "payment verification note" }
 ```
 Optional chain guard example:
 ```json
-{ "chain": "solana", "walletId": "Q7X2K9P", "to": "SolanaRecipientWalletAddress...", "amount": "0.01" }
+{ "chain": "solana", "walletId": "Q7X2K9P", "to": "SolanaRecipientWalletAddress...", "amountDisplay": "0.01" }
 ```
 
 ### Response
@@ -312,10 +314,12 @@ Optional chain guard example:
   "status": "confirmed",
   "token": "USDC",
   "tokenAddress": "0xA0b86991...",
-  "requestedValue": "100000000",
-  "adjustedValue": "100000000",
-  "requestedAmount": "100",
-  "adjustedAmount": "100",
+  "requestedValueBaseUnits": "100000000",
+  "adjustedValueBaseUnits": "100000000",
+  "requestedAmountDisplay": "100",
+  "adjustedAmountDisplay": "100",
+  "valueBaseUnits": "100000000",
+  "amountDisplay": "100",
   "fee": "1000000",
   "feePercent": "1%",
   "feeAmount": "1.0",
@@ -919,5 +923,5 @@ Network is fixed at wallet creation and cannot be changed.
 - Polymarket endpoints require a configured `polygon-mainnet` EVM wallet
 - All Polymarket order/read endpoints require exactly one wallet selector (`walletId` or `walletAddress`)
 - Platform fee is deducted from the token amount (not ETH), consistent with ETH transfers
-- Use `amount` for simplicity (human-readable), use `value` when you need precise base-unit control
+- For transfer, use `amountDisplay` for simplicity (human-readable), use `valueBaseUnits` when you need precise base-unit control (legacy `amount`/`value` aliases are still accepted)
 - Optional `chain` guard is supported on agent endpoints; mismatches return `400` with `code: "chain_mismatch"`.
